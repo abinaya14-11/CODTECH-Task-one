@@ -1,0 +1,50 @@
+import nltk
+from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
+
+nltk.download('punkt')
+
+# Sample intents and responses
+intents = {
+    "greeting": ["hello", "hi", "hey", "good morning", "good evening"],
+    "goodbye": ["bye", "see you", "take care"],
+    "thanks": ["thank you", "thanks", "appreciate it"],
+    "name": ["what is your name", "who are you"],
+}
+
+responses = {
+    "greeting": "Hello! How can I assist you today?",
+    "goodbye": "Goodbye! Have a great day!",
+    "thanks": "You're welcome!",
+    "name": "I am your AI chatbot assistant.",
+    "default": "I'm sorry, I didn't understand that.",
+}
+
+# Flatten patterns and labels
+patterns = []
+labels = []
+for intent, phrases in intents.items():
+    for phrase in phrases:
+        patterns.append(phrase)
+        labels.append(intent)
+
+# Vectorize the patterns
+vectorizer = CountVectorizer().fit_transform(patterns)
+
+def chatbot_response(user_input):
+    user_vec = CountVectorizer().fit(patterns + [user_input]).transform([user_input])
+    sims = cosine_similarity(user_vec, vectorizer).flatten()
+    best_match = sims.argmax()
+    if sims[best_match] > 0.2:
+        return responses[labels[best_match]]
+    else:
+        return responses["default"]
+
+# Chat loop
+print("Chatbot: Hello! Type 'bye' to exit.")
+while True:
+    user_input = input("You: ").lower()
+    if user_input in intents["goodbye"]:
+        print("Chatbot:", responses["goodbye"])
+        break
+    print("Chatbot:", chatbot_response(user_input))
