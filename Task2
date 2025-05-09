@@ -1,0 +1,41 @@
+import pandas as pd
+from fpdf import FPDF
+
+# Load data from CSV
+data = pd.read_csv("data.csv")  # Replace with your filename
+
+# Perform basic analysis
+summary = data.describe(include='all').fillna('N/A')
+
+# Define PDF Report class
+class PDFReport(FPDF):
+    def header(self):
+        self.set_font("Arial", "B", 16)
+        self.cell(0, 10, "Automated Data Analysis Report", ln=True, align="C")
+        self.ln(10)
+
+    def add_summary_table(self, summary_df):
+        self.set_font("Arial", size=10)
+        col_width = self.epw / (len(summary_df.columns) + 1)
+
+        # Header
+        self.set_fill_color(200, 220, 255)
+        self.cell(col_width, 10, "Stat", border=1, fill=True)
+        for col in summary_df.columns:
+            self.cell(col_width, 10, col, border=1, fill=True)
+        self.ln()
+
+        # Rows
+        for idx, row in summary_df.iterrows():
+            self.cell(col_width, 10, str(idx), border=1)
+            for item in row:
+                self.cell(col_width, 10, str(item), border=1)
+            self.ln()
+
+# Generate PDF
+pdf = PDFReport()
+pdf.add_page()
+pdf.add_summary_table(summary)
+
+# Save PDF
+pdf.output("report.pdf")
